@@ -343,12 +343,13 @@
   <div class="ft-c">&copy; 2026 RadiantShield. All rights reserved.</div>
 </div></footer>
 
+<script src="config.js"></script>
 <script>
 (function(){
-  // ─── Airtable config (fill when base is ready) ───
-  var AT_PAT='';
-  var AT_BASE='';
-  var AT_TABLE='Enquiries';
+  var cfg=window.RS_CONFIG||{};
+  var AT_PAT=cfg.AIRTABLE_PAT||'';
+  var AT_BASE=cfg.AIRTABLE_BASE||'';
+  var AT_TABLE=cfg.AIRTABLE_TABLE||'Enquiries';
 
   // Nav toggle
   document.getElementById('nM').onclick=function(){document.getElementById('nR').classList.toggle('on')};
@@ -372,7 +373,7 @@
       fetch('https://api.airtable.com/v0/'+AT_BASE+'/'+encodeURIComponent(AT_TABLE),{
         method:'POST',
         headers:{'Authorization':'Bearer '+AT_PAT,'Content-Type':'application/json'},
-        body:JSON.stringify({fields:{'First Name':d.firstName,'Last Name':d.lastName,'Email':d.email,'Organisation':d.organisation,'Job Title':d.jobTitle||'','Phone':d.phone||'','Deployment Interest':d.deployment,'Message':d.message,'Status':'New'}})
+        body:JSON.stringify({fields:{'First Name':d.firstName,'Last Name':d.lastName,'Email':d.email,'Organisation':d.organisation,'Job Title':d.jobTitle||'','Phone':d.phone||'','Deployment Interest':d.deployment,'Message':d.message}})
       }).then(function(r){if(!r.ok)throw new Error();ok()}).catch(function(){fail()});
     } else {
       var s=JSON.parse(localStorage.getItem('rs_eq')||'[]');s.push(d);localStorage.setItem('rs_eq',JSON.stringify(s));ok();
