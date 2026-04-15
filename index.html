@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RadiantShield — DICOM Anonymisation & Restoration Platform</title>
+  <meta name="description" content="RadiantShield is a secure DICOM anonymisation and restoration platform for healthcare organisations sharing imaging data with AI vendors, tele-radiology, and research services.">
+  <meta name="theme-color" content="#0B0F1A">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg-0: #06080f;
+      --bg-1: #0B0F1A;
+      --bg-2: #111827;
+      --bg-3: #1a2236;
+      --bg-surface: #0d1220;
+      --border-subtle: rgba(255,255,255,0.06);
+      --border-medium: rgba(255,255,255,0.08);
+      --border-strong: rgba(255,255,255,0.12);
+      --text-0: #f1f5f9;
+      --text-1: #cbd5e1;
+      --text-2: #7c8ba1;
+      --text-3: #475569;
+      --accent: #3b82f6;
+      --accent-hover: #2563eb;
+      --accent-subtle: rgba(59,130,246,0.08);
+      --accent-muted: rgba(59,130,246,0.15);
+      --green: #22c55e;
+      --green-subtle: rgba(34,197,94,0.1);
+      --red: #ef4444;
+      --amber: #eab308;
+      --purple: #a78bfa;
+      --cyan: #22d3ee;
+      --r-sm: 6px;
+      --r-md: 10px;
+      --r-lg: 14px;
+      --r-xl: 20px;
+      --shadow-card: 0 1px 3px rgba(0,0,0,0.3), 0 0 0 1px var(--border-subtle);
+      --shadow-elevated: 0 4px 24px rgba(0,0,0,0.4), 0 0 0 1px var(--border-subtle);
+      --max-w: 1120px;
+    }
+
+    html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg-1);
+      color: var(--text-1);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      overflow-x: hidden;
+    }
+
+    ::selection { background: var(--accent-muted); }
+
+    /* ─── NAV ─── */
+    .nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: rgba(11,15,26,0.72);
+      backdrop-filter: saturate(180%) blur(16px);
+      -webkit-backdrop-filter: saturate(180%) blur(16px);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .nav-inner {
+      max-width: var(--max-w); margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 32px; height: 56px;
+    }
+    .nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .nav-logo-mark {
+      width: 28px; height: 28px; background: var(--accent);
+      border-radius: 7px; display: flex; align-items: center; justify-content: center;
+    }
+    .nav-logo-mark svg { width: 16px; height: 16px; }
+    .nav-logo-text { font-size: 15px; font-weight: 650; color: var(--text-0); letter-spacing: -0.3px; }
+    .nav-links { display: flex; align-items: center; gap: 4px; list-style: none; }
+    .nav-links a {
+      color: var(--text-2); text-decoration: none; font-size: 13px; font-weight: 500;
+      padding: 6px 12px; border-radius: var(--r-sm); transition: all 0.15s;
+    }
+    .nav-links a:hover { color: var(--text-1); background: rgba(255,255,255,0.04); }
+    .nav-cta-btn {
+      margin-left: 12px;
+      background: var(--accent) !important; color: #fff !important;
+      padding: 6px 16px !important; border-radius: var(--r-sm);
+      font-weight: 600 !important; font-size: 13px !important;
+    }
+    .nav-cta-btn:hover { background: var(--accent-hover) !important; }
+    .nav-mobile { display: none; background: none; border: none; color: var(--text-1); cursor: pointer; padding: 4px; }
+
+    /* ─── LAYOUT ─── */
+    .wrap { max-width: var(--max-w); margin: 0 auto; padding: 0 32px; }
+    .section { padding: 96px 0; }
+    .section-alt { background: var(--bg-0); }
+    .label {
+      font-size: 11px; font-weight: 650; letter-spacing: 1.6px; text-transform: uppercase;
+      color: var(--accent); margin-bottom: 12px; display: block;
+    }
+    .title {
+      font-size: clamp(26px, 3.2vw, 38px); font-weight: 750; line-height: 1.18;
+      letter-spacing: -0.5px; color: var(--text-0); margin-bottom: 16px;
+    }
+    .subtitle {
+      font-size: 16px; color: var(--text-2); line-height: 1.65; max-width: 560px;
+    }
+    .center { text-align: center; }
+    .center .subtitle { margin: 0 auto; }
+
+    /* ─── HERO ─── */
+    .hero { padding: 140px 0 100px; position: relative; overflow: hidden; }
+    .hero::before {
+      content: ''; position: absolute;
+      top: -120px; left: 50%; transform: translateX(-50%);
+      width: 700px; height: 700px;
+      background: radial-gradient(circle, rgba(59,130,246,0.06) 0%, transparent 65%);
+      pointer-events: none;
+    }
+    .hero-inner { text-align: center; position: relative; }
+    .hero-chip {
+      display: inline-flex; align-items: center; gap: 8px;
+      border: 1px solid var(--border-medium); background: var(--bg-2);
+      border-radius: 100px; padding: 5px 14px 5px 6px;
+      font-size: 12px; font-weight: 550; color: var(--text-2); margin-bottom: 24px;
+    }
+    .hero-chip-dot {
+      width: 6px; height: 6px; background: var(--green); border-radius: 50%;
+      box-shadow: 0 0 6px rgba(34,197,94,0.6);
+    }
+    .hero h1 {
+      font-size: clamp(34px, 5vw, 56px); font-weight: 780; line-height: 1.08;
+      letter-spacing: -1.5px; color: var(--text-0); margin-bottom: 20px;
+    }
+    .hero h1 .grad {
+      background: linear-gradient(135deg, var(--accent) 0%, var(--cyan) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero-p {
+      font-size: 17px; color: var(--text-2); max-width: 540px;
+      margin: 0 auto 36px; line-height: 1.65;
+    }
+    .hero-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 10px 22px; border-radius: var(--r-sm);
+      font-size: 14px; font-weight: 600; text-decoration: none;
+      transition: all 0.15s; cursor: pointer; border: none;
+      font-family: inherit;
+    }
+    .btn-p { background: var(--accent); color: #fff; }
+    .btn-p:hover { background: var(--accent-hover); }
+    .btn-s { background: var(--bg-2); color: var(--text-1); border: 1px solid var(--border-medium); }
+    .btn-s:hover { border-color: var(--border-strong); background: var(--bg-3); }
+    .btn svg { width: 15px; height: 15px; }
+
+    .hero-stats {
+      display: flex; gap: 1px; justify-content: center; margin-top: 56px;
+      background: var(--border-subtle); border-radius: var(--r-lg);
+      overflow: hidden; border: 1px solid var(--border-subtle);
+    }
+    .hero-stat {
+      flex: 1; max-width: 180px; padding: 20px 24px;
+      background: var(--bg-2); text-align: center;
+    }
+    .hero-stat-val {
+      font-size: 22px; font-weight: 750; color: var(--text-0);
+      font-family: 'JetBrains Mono', monospace; letter-spacing: -0.5px;
+    }
+    .hero-stat-lbl { font-size: 11px; color: var(--text-3); margin-top: 2px; font-weight: 500; }
+
+    /* ─── PROBLEM ─── */
+    .problem-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-top: 40px; }
+    .p-card {
+      background: var(--bg-2); border: 1px solid var(--border-subtle);
+      border-radius: var(--r-lg); padding: 28px; position: relative;
+    }
+    .p-card-accent {
+      position: absolute; top: 0; left: 24px; right: 24px; height: 1px;
+    }
+    .p-card:nth-child(1) .p-card-accent { background: linear-gradient(90deg, transparent, var(--red), transparent); }
+    .p-card:nth-child(2) .p-card-accent { background: linear-gradient(90deg, transparent, var(--amber), transparent); }
+    .p-card:nth-child(3) .p-card-accent { background: linear-gradient(90deg, transparent, var(--purple), transparent); }
+    .p-card-num {
+      font-size: 36px; font-weight: 800; font-family: 'JetBrains Mono', monospace;
+      margin-bottom: 2px; line-height: 1;
+    }
+    .p-card:nth-child(1) .p-card-num { color: var(--red); }
+    .p-card:nth-child(2) .p-card-num { color: var(--amber); }
+    .p-card:nth-child(3) .p-card-num { color: var(--purple); }
+    .p-card h3 { font-size: 15px; font-weight: 650; color: var(--text-0); margin-bottom: 8px; }
+    .p-card p { font-size: 13px; color: var(--text-2); line-height: 1.65; }
+
+    /* ─── SOLUTION ─── */
+    .sol-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 16px; margin-top: 40px; }
+    .sol-card {
+      background: var(--bg-2); border: 1px solid var(--border-subtle);
+      border-radius: var(--r-lg); padding: 28px;
+      transition: border-color 0.2s;
+    }
+    .sol-card:hover { border-color: var(--border-strong); }
+    .sol-icon {
+      width: 36px; height: 36px; border-radius: var(--r-sm);
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 16px;
+    }
+    .sol-card:nth-child(1) .sol-icon { background: var(--accent-subtle); color: var(--accent); }
+    .sol-card:nth-child(2) .sol-icon { background: var(--green-subtle); color: var(--green); }
+    .sol-card:nth-child(3) .sol-icon { background: rgba(234,179,8,0.08); color: var(--amber); }
+    .sol-card:nth-child(4) .sol-icon { background: rgba(167,139,250,0.08); color: var(--purple); }
+    .sol-icon svg { width: 18px; height: 18px; }
+    .sol-card h3 { font-size: 15px; font-weight: 650; color: var(--text-0); margin-bottom: 6px; }
+    .sol-card p { font-size: 13px; color: var(--text-2); line-height: 1.65; }
+
+    /* ─── WORKFLOW ─── */
+    .wf-track { display: flex; gap: 0; margin-top: 48px; position: relative; }
+    .wf-track::before {
+      content: ''; position: absolute; top: 24px; left: 48px; right: 48px;
+      height: 1px; background: linear-gradient(90deg, var(--accent), var(--border-subtle) 50%, var(--accent));
+    }
+    .wf-step { flex: 1; text-align: center; position: relative; }
+    .wf-num {
+      width: 48px; height: 48px; border-radius: 50%;
+      background: var(--bg-2); border: 2px solid var(--accent);
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 14px; font-size: 14px; font-weight: 750;
+      font-family: 'JetBrains Mono', monospace; color: var(--accent);
+      position: relative; z-index: 1;
+    }
+    .wf-step h4 { font-size: 14px; font-weight: 650; color: var(--text-0); margin-bottom: 4px; }
+    .wf-step p { font-size: 12px; color: var(--text-2); line-height: 1.55; padding: 0 4px; }
+    .wf-note {
+      margin-top: 32px; padding: 14px 20px;
+      background: var(--bg-2); border: 1px solid var(--border-subtle);
+      border-radius: var(--r-md); text-align: center;
+      font-size: 13px; color: var(--text-2);
+    }
+    .wf-note strong { color: var(--text-0); font-weight: 600; }
+
+    /* ─── CAPABILITIES ─── */
+    .cap-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-top: 40px; }
+    .cap-card {
+      background: var(--bg-2); border: 1px solid var(--border-subtle);
+      border-radius: var(--r-lg); padding: 24px;
+      transition: border-color 0.2s, transform 0.15s;
+    }
+    .cap-card:hover { border-color: var(--border-strong); transform: translateY(-1px); }
+    .cap-card-icon {
+      width: 32px; height: 32px; border-radius: var(--r-sm);
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 14px; background: var(--accent-subtle); color: var(--accent);
+    }
+    .cap-card-icon svg { width: 16px; height: 16px; }
+    .cap-card h3 { font-size: 14px; font-weight: 650; color: var(--text-0); margin-bottom: 6px; }
+    .cap-card p { font-size: 12.5px; color: var(--text-2); line-height: 1.6; }
+
+    /* ─── SECURITY ─── */
+    .sec-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-top: 40px; }
+    .sec-card {
+      background: var(--bg-2); border: 1px solid var(--border-subtle);
+      border-radius: var(--r-lg); padding: 24px;
+    }
+    .sec-icon {
+      width: 32px; height: 32px; border-radius: var(--r-sm);
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 14px; background: var(--green-subtle); color: var(--green);
+    }
+    .sec-icon svg { width: 16px; height: 16px; }
+    .sec-card h3 { font-size: 14px; font-weight: 650; color: var(--text-0); margin-bottom: 6px; }
+    .sec-card p { font-size: 12.5px; color: var(--text-2); line-height: 1.6; }
+
+    /* ─── DEPLOYMENT ─── */
+    .dep-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-top: 40px; }
+    .dep-card {
+      background: var(--bg-2); border: 1px solid var(--border-subtle);
+      border-radius: var(--r-lg); padding: 28px; text-align: center;
+      transition: border-color 0.2s;
+    }
+    .dep-card:hover { border-color: var(--accent); }
+    .dep-card-icon {
+      width: 44px; height: 44px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 16px; background: var(--accent-subtle); color: var(--accent);
+    }
+    .dep-card-icon svg { width: 20px; height: 20px; }
+    .dep-card h3 { font-size: 15px; font-weight: 650; color: var(--text-0); margin-bottom: 6px; }
+    .dep-card p { font-size: 13px; color: var(--text-2); line-height: 1.6; }
+    .modalities {
+      display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 36px;
+    }
+    .mod-tag {
+      background: var(--bg-2); border: 1px solid var(--border-subtle);
+      border-radius: 100px; padding: 6px 16px;
+      font-size: 12px; font-weight: 600; color: var(--text-2);
+    }
+
+    /* ─── TESTIMONIALS ─── */
+    .test-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 16px; margin-top: 40px; }
+    .test-card {
+      background: var(--bg-2); border: 1px solid var(--border-subtle);
+      border-radius: var(--r-lg); padding: 28px;
+    }
+    .test-quote {
+      font-size: 15px; color: var(--text-1); line-height: 1.7; font-style: italic;
+      margin-bottom: 20px; position: relative; padding-left: 20px;
+      border-left: 2px solid var(--accent);
+    }
+    .test-author { display: flex; align-items: center; gap: 12px; }
+    .test-avatar {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: var(--accent-subtle); color: var(--accent);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 700;
+    }
+    .test-name { font-size: 13px; font-weight: 650; color: var(--text-0); }
+    .test-role { font-size: 12px; color: var(--text-3); }
+
+    /* ─── CONTACT ─── */
+    .contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; margin-top: 40px; }
+    .contact-left h3 { font-size: 18px; font-weight: 650; color: var(--text-0); margin-bottom: 12px; }
+    .contact-left p { font-size: 14px; color: var(--text-2); line-height: 1.65; margin-bottom: 28px; }
+    .contact-list { list-style: none; }
+    .contact-list li {
+      display: flex; align-items: flex-start; gap: 10px;
+      padding: 8px 0; font-size: 13px; color: var(--text-2);
+    }
+    .contact-list svg { flex-shrink: 0; margin-top: 1px; color: var(--green); width: 16px; height: 16px; }
+    .form-box {
+      background: var(--bg-2); border: 1px solid var(--border-subtle);
+      border-radius: var(--r-lg); padding: 28px;
+    }
+    .form-box h3 { font-size: 16px; font-weight: 650; color: var(--text-0); margin-bottom: 20px; }
+    .fg { margin-bottom: 16px; }
+    .fg label { display: block; font-size: 12px; font-weight: 600; color: var(--text-2); margin-bottom: 4px; }
+    .fg .req { color: var(--red); }
+    .fg input, .fg select, .fg textarea {
+      width: 100%; padding: 9px 12px;
+      background: var(--bg-surface); border: 1px solid var(--border-subtle);
+      border-radius: var(--r-sm); color: var(--text-0);
+      font-family: inherit; font-size: 13px; transition: border-color 0.15s;
+    }
+    .fg input::placeholder, .fg textarea::placeholder { color: var(--text-3); }
+    .fg input:focus, .fg select:focus, .fg textarea:focus {
+      outline: none; border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-subtle);
+    }
+    .fg select {
+      cursor: pointer; appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%237c8ba1'%3E%3Cpath d='M2 4l4 4 4-4'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 10px center;
+    }
+    .fg select option { background: var(--bg-2); color: var(--text-0); }
+    .fg textarea { resize: vertical; min-height: 80px; }
+    .fg-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .form-submit-btn {
+      width: 100%; padding: 10px;
+      background: var(--accent); color: #fff; border: none;
+      border-radius: var(--r-sm); font-size: 14px; font-weight: 600;
+      cursor: pointer; font-family: inherit; transition: background 0.15s;
+    }
+    .form-submit-btn:hover { background: var(--accent-hover); }
+    .form-submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .form-ok { display: none; text-align: center; padding: 32px 16px; }
+    .form-ok svg { color: var(--green); margin-bottom: 12px; }
+    .form-ok h4 { font-size: 16px; font-weight: 650; color: var(--text-0); margin-bottom: 6px; }
+    .form-ok p { font-size: 13px; color: var(--text-2); }
+    .form-err {
+      display: none; padding: 10px 14px; margin-bottom: 16px;
+      background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2);
+      border-radius: var(--r-sm); font-size: 13px; color: var(--red);
+    }
+
+    /* ─── FOOTER ─── */
+    .footer {
+      padding: 28px 0; border-top: 1px solid var(--border-subtle);
+    }
+    .footer-inner {
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 12px;
+    }
+    .footer-left { display: flex; align-items: center; gap: 8px; }
+    .footer-mark {
+      width: 22px; height: 22px; background: var(--accent);
+      border-radius: 5px; display: flex; align-items: center; justify-content: center;
+    }
+    .footer-mark svg { width: 12px; height: 12px; }
+    .footer-name { font-size: 13px; font-weight: 650; color: var(--text-0); }
+    .footer-copy { font-size: 12px; color: var(--text-3); }
+
+    /* ─── MOBILE ─── */
+    @media (max-width: 900px) {
+      .problem-grid, .cap-grid, .sec-grid, .dep-grid { grid-template-columns: 1fr; }
+      .sol-grid, .test-grid { grid-template-columns: 1fr; }
+      .contact-grid { grid-template-columns: 1fr; }
+      .fg-row { grid-template-columns: 1fr; }
+      .wf-track { flex-direction: column; gap: 24px; }
+      .wf-track::before { display: none; }
+      .hero-stats { flex-direction: column; max-width: 240px; margin-left: auto; margin-right: auto; }
+      .hero-stat { max-width: none; }
+    }
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      .nav-links.open {
+        display: flex; flex-direction: column;
+        position: absolute; top: 56px; left: 0; right: 0;
+        background: var(--bg-1); border-bottom: 1px solid var(--border-subtle);
+        padding: 16px 20px; gap: 8px;
+      }
+      .nav-mobile { display: block; }
+      .wrap { padding: 0 20px; }
+      .section { padding: 64px 0; }
+      .hero { padding: 100px 0 60px; }
+    }
+
+    /* ─── ANIMATE ─── */
+    .reveal { opacity: 0; transform: translateY(16px); transition: opacity 0.5s ease, transform 0.5s ease; }
+    .reveal.in { opacity: 1; transform: translateY(0); }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="#" class="nav-logo">
+      <div class="nav-logo-mark">
+        <svg viewBox="0 0 16 16" fill="none"><path d="M8 2L3 5.5v5L8 14l5-3.5v-5L8 2z" stroke="#fff" stroke-width="1.5" fill="none"/><circle cx="8" cy="8" r="2" fill="#fff"/></svg>
+      </div>
+      <span class="nav-logo-text">RadiantShield</span>
+    </a>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="#problem">Problem</a></li>
+      <li><a href="#solution">Solution</a></li>
+      <li><a href="#workflow">Workflow</a></li>
+      <li><a href="#capabilities">Capabilities</a></li>
+      <li><a href="#security">Security</a></li>
+      <li><a href="#deployment">Deployment</a></li>
+      <li><a href="#contact" class="nav-cta-btn">Get in Touch</a></li>
+    </ul>
+    <button class="nav-mobile" id="navToggle" aria-label="Menu">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="hero">
+  <div class="wrap hero-inner">
+    <div class="hero-chip">
+      <span class="hero-chip-dot"></span>
+      SaaS &middot; On-Premise &middot; Private Cloud
+    </div>
+    <h1>Secure Medical Imaging<br>with <span class="grad">RadiantShield</span></h1>
+    <p class="hero-p">A DICOM anonymisation and restoration platform between your PACS and external AI, tele-radiology, and research services &mdash; patient identity never leaves your control.</p>
+    <div class="hero-actions">
+      <a href="#contact" class="btn btn-p">Schedule a Discovery Session <svg viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+      <a href="#workflow" class="btn btn-s">How It Works</a>
+    </div>
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <div class="hero-stat-val">18</div>
+        <div class="hero-stat-lbl">HIPAA Identifiers Protected</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-val">PS3.15</div>
+        <div class="hero-stat-lbl">DICOM Compliant</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-val">AES-256</div>
+        <div class="hero-stat-lbl">Encryption Standard</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-val">200+</div>
+        <div class="hero-stat-lbl">Multi-Site Scale</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROBLEM -->
+<section class="section section-alt" id="problem">
+  <div class="wrap">
+    <div class="reveal">
+      <span class="label">The Challenge</span>
+      <h2 class="title">Healthcare Needs AI &mdash; But Can't Expose Patient Identity</h2>
+      <p class="subtitle">Sharing unprocessed DICOM data with external vendors creates compliance risks, verification gaps, and manual overhead.</p>
+    </div>
+    <div class="problem-grid reveal">
+      <div class="p-card">
+        <div class="p-card-accent"></div>
+        <div class="p-card-num">18</div>
+        <h3>PHI Exposure Risk</h3>
+        <p>HIPAA identifiers at risk in every raw DICOM transfer. Unprocessed imaging sent to third-party AI vendors leaks patient names, IDs, and dates &mdash; violating HIPAA, DPDP Act, and GDPR.</p>
+      </div>
+      <div class="p-card">
+        <div class="p-card-accent"></div>
+        <div class="p-card-num">0%</div>
+        <h3>No Independent Verification</h3>
+        <p>Most hospitals cannot independently verify vendor anonymisation. There is no proof that PHI is removed before AI models process your data.</p>
+      </div>
+      <div class="p-card">
+        <div class="p-card-accent"></div>
+        <div class="p-card-num">3&ndash;5&times;</div>
+        <h3>Manual Workflow Overhead</h3>
+        <p>IT teams script DICOM transfers per vendor, juggle proprietary APIs, and manually de-identify studies per modality &mdash; multiplying effort for every new integration.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SOLUTION -->
+<section class="section" id="solution">
+  <div class="wrap">
+    <div class="reveal">
+      <span class="label">The Solution</span>
+      <h2 class="title">What is RadiantShield?</h2>
+      <p class="subtitle">A secure data exchange layer between your PACS and external AI, tele-radiology, and research services.</p>
+    </div>
+    <div class="sol-grid reveal">
+      <div class="sol-card">
+        <div class="sol-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
+        <h3>DICOM Anonymisation</h3>
+        <p>PS3.15-compliant metadata de-identification plus pixel-level PHI redaction via OCR/CV. Configurable profiles per workflow and modality.</p>
+      </div>
+      <div class="sol-card">
+        <div class="sol-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+        <h3>Assurance Gate</h3>
+        <p>Independent 39-tag PS3.15 validation on every outbound study. Blocks and alerts on any residual PHI. Zero-trust verification before data leaves.</p>
+      </div>
+      <div class="sol-card">
+        <div class="sol-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+        <h3>Intelligent Routing</h3>
+        <p>Declarative rules match studies by Modality, Body Part, and more. Each rule targets a specific AI vendor with tailored anonymisation profiles.</p>
+      </div>
+      <div class="sol-card">
+        <div class="sol-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 20v-2a4 4 0 00-3-3.87M17 20v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
+        <h3>Reversible Restoration</h3>
+        <p>UUID-based Alias ID per study. Deterministic re-identification from encrypted Secure Ledger. Lossless DICOM fidelity on return.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WORKFLOW -->
+<section class="section section-alt" id="workflow">
+  <div class="wrap center">
+    <div class="reveal">
+      <span class="label">How It Works</span>
+      <h2 class="title">Five-Step Secure Pipeline</h2>
+      <p class="subtitle">Every action logged in an immutable audit trail &mdash; full traceability for HIPAA, DPDP Act, and GDPR.</p>
+    </div>
+    <div class="wf-track reveal">
+      <div class="wf-step">
+        <div class="wf-num">01</div>
+        <h4>Ingest</h4>
+        <p>C-STORE, REST API, or batch from PACS / RIS</p>
+      </div>
+      <div class="wf-step">
+        <div class="wf-num">02</div>
+        <h4>Anonymise</h4>
+        <p>Metadata + pixel PHI removal. Assign Alias ID.</p>
+      </div>
+      <div class="wf-step">
+        <div class="wf-num">03</div>
+        <h4>Validate</h4>
+        <p>39-tag PS3.15 check + SHA-256 integrity hash.</p>
+      </div>
+      <div class="wf-step">
+        <div class="wf-num">04</div>
+        <h4>Route</h4>
+        <p>Forward via DICOMweb, REST, or C-STORE.</p>
+      </div>
+      <div class="wf-step">
+        <div class="wf-num">05</div>
+        <h4>Return</h4>
+        <p>Re-identify AI results &amp; deliver back to PACS.</p>
+      </div>
+    </div>
+    <div class="wf-note reveal">
+      <strong>All modalities:</strong> CT &middot; MRI &middot; Ultrasound &middot; PET &middot; X-Ray &middot; Mammography &middot; CR &middot; DX &middot; NM &middot; SC
+    </div>
+  </div>
+</section>
+
+<!-- CAPABILITIES -->
+<section class="section" id="capabilities">
+  <div class="wrap">
+    <div class="reveal">
+      <span class="label">Core Capabilities</span>
+      <h2 class="title">Built for Production Healthcare Workloads</h2>
+    </div>
+    <div class="cap-grid reveal">
+      <div class="cap-card">
+        <div class="cap-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></div>
+        <h3>Configurable Profiles</h3>
+        <p>3 presets: Strict, AI-Friendly, Research. Per-tag actions: Keep, Remove, Replace, Offset. PS3.15 codes auto-populated.</p>
+      </div>
+      <div class="cap-card">
+        <div class="cap-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>
+        <h3>Pixel-Level Redaction</h3>
+        <p>OCR/CV detection of burned-in text. Image masking and redaction pipelines. Modality-aware processing for US, SC, NM.</p>
+      </div>
+      <div class="cap-card">
+        <div class="cap-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+        <h3>Multi-Protocol Egress</h3>
+        <p>DICOMweb STOW-RS for cloud PACS. REST API for proprietary AI endpoints. C-STORE SCU for traditional targets.</p>
+      </div>
+      <div class="cap-card">
+        <div class="cap-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg></div>
+        <h3>Encrypted PHI Vault</h3>
+        <p>AES-256-GCM at rest and in transit. Client-controlled encryption keys. Append-only, auditable Secure Ledger.</p>
+      </div>
+      <div class="cap-card">
+        <div class="cap-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg></div>
+        <h3>Validation &amp; Integrity</h3>
+        <p>Post-anonymisation PHI removal verification. Restoration completeness checks. SHA-256 manifest hashes per study.</p>
+      </div>
+      <div class="cap-card">
+        <div class="cap-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div>
+        <h3>Monitoring &amp; Alerting</h3>
+        <p>Real-time throughput and latency metrics. Alerting on failures and SLA breaches. Admin dashboard with full visibility.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECURITY -->
+<section class="section section-alt" id="security">
+  <div class="wrap">
+    <div class="reveal">
+      <span class="label">Security &amp; Compliance</span>
+      <h2 class="title">Enterprise-Grade from Day One</h2>
+    </div>
+    <div class="sec-grid reveal">
+      <div class="sec-card">
+        <div class="sec-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg></div>
+        <h3>AES-256 Encryption</h3>
+        <p>PHI encrypted at rest and in transit. Client-controlled encryption keys. Hardened credentials vault.</p>
+      </div>
+      <div class="sec-card">
+        <div class="sec-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/></svg></div>
+        <h3>RBAC + SSO / LDAP</h3>
+        <p>Role-based access control with SSO and LDAP integration. Admin, operator, and read-only roles.</p>
+      </div>
+      <div class="sec-card">
+        <div class="sec-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+        <h3>Compliance-Ready</h3>
+        <p>HIPAA, GDPR, and DPDP Act aligned. Immutable audit logs for every action. 72-hour breach notification support.</p>
+      </div>
+      <div class="sec-card">
+        <div class="sec-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
+        <h3>Data Residency</h3>
+        <p>Region-specific deployments for full data sovereignty. PHI never leaves the deployment boundary you define.</p>
+      </div>
+      <div class="sec-card">
+        <div class="sec-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><circle cx="6" cy="6" r="1"/><circle cx="6" cy="18" r="1"/></svg></div>
+        <h3>200+ Site Scale</h3>
+        <p>Horizontal scaling with multi-tenant architecture. Schema isolation per tenant. Centralised management dashboard.</p>
+      </div>
+      <div class="sec-card">
+        <div class="sec-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></div>
+        <h3>HL7 / FHIR Extensible</h3>
+        <p>DICOM + REST today. HL7 and FHIR integration-ready for future-proof interoperability across your health IT ecosystem.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DEPLOYMENT -->
+<section class="section" id="deployment">
+  <div class="wrap center">
+    <div class="reveal">
+      <span class="label">Deployment Options</span>
+      <h2 class="title">Drop-In &mdash; No Changes to Your Infrastructure</h2>
+      <p class="subtitle">Integrates directly with Intelerad, GE Centricity, Sectra, Agfa, Philips, and other PACS/RIS systems.</p>
+    </div>
+    <div class="dep-grid reveal">
+      <div class="dep-card">
+        <div class="dep-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12A10 10 0 1012 2a10 10 0 0010 10z"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10A15.3 15.3 0 0112 2z"/></svg></div>
+        <h3>SaaS</h3>
+        <p>Fully managed cloud hosted by RadiantShield. Zero infrastructure overhead for your team.</p>
+      </div>
+      <div class="dep-card">
+        <div class="dep-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><circle cx="6" cy="6" r="1"/><circle cx="6" cy="18" r="1"/></svg></div>
+        <h3>On-Premise</h3>
+        <p>Deploy inside your own environment. Full control over data, infrastructure, and network boundaries.</p>
+      </div>
+      <div class="dep-card">
+        <div class="dep-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 10h-1.26A8 8 0 109 20h9a5 5 0 000-10z"/></svg></div>
+        <h3>Private Cloud</h3>
+        <p>Your AWS, Azure, or GCP tenancy. We deploy and manage. You own the infrastructure.</p>
+      </div>
+    </div>
+    <div class="modalities reveal">
+      <span class="mod-tag">CT</span><span class="mod-tag">MRI</span><span class="mod-tag">Ultrasound</span>
+      <span class="mod-tag">PET</span><span class="mod-tag">X-Ray</span><span class="mod-tag">Mammography</span>
+      <span class="mod-tag">CR</span><span class="mod-tag">DX</span><span class="mod-tag">NM</span><span class="mod-tag">SC</span>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section class="section section-alt" id="testimonials">
+  <div class="wrap center">
+    <div class="reveal">
+      <span class="label">What Our Partners Say</span>
+      <h2 class="title">Trusted by Healthcare Organisations</h2>
+    </div>
+    <div class="test-grid reveal">
+      <div class="test-card">
+        <div class="test-quote">
+          <!-- REPLACE with real customer testimonial -->
+          RadiantShield gave us a standardised, verifiable anonymisation layer across all our AI vendor integrations. We no longer rely on vendor claims &mdash; we verify independently before any data leaves our network.
+        </div>
+        <div class="test-author">
+          <div class="test-avatar">DK</div>
+          <div>
+            <!-- REPLACE with real name and title -->
+            <div class="test-name">Dr. K.</div>
+            <div class="test-role">CMIO, Multi-Site Health System</div>
+          </div>
+        </div>
+      </div>
+      <div class="test-card">
+        <div class="test-quote">
+          <!-- REPLACE with real customer testimonial -->
+          What used to take our IT team days of scripting per vendor is now a single declarative routing rule. The assurance gate gives our compliance officer confidence that PHI is genuinely removed.
+        </div>
+        <div class="test-author">
+          <div class="test-avatar">SP</div>
+          <div>
+            <!-- REPLACE with real name and title -->
+            <div class="test-name">S. Patel</div>
+            <div class="test-role">Director of IT, Regional Hospital Network</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section class="section" id="contact">
+  <div class="wrap">
+    <div class="reveal">
+      <span class="label">Get in Touch</span>
+      <h2 class="title">Ready to Secure Your Imaging Pipeline?</h2>
+    </div>
+    <div class="contact-grid reveal">
+      <div class="contact-left">
+        <h3>Schedule a Technical Discovery Session</h3>
+        <p>Tell us about your environment and requirements. We will walk you through a tailored demo covering deployment, custom profile configuration, and integration assessment.</p>
+        <ul class="contact-list">
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Live demo with your modality and workflow</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Custom anonymisation profile walkthrough</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> PACS/RIS integration assessment</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Deployment architecture planning</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Compliance and security review</li>
+        </ul>
+      </div>
+      <div class="form-box">
+        <h3>Enquiry Form</h3>
+        <div class="form-err" id="formErr"></div>
+        <form id="enquiryForm">
+          <div class="fg-row">
+            <div class="fg">
+              <label>First Name <span class="req">*</span></label>
+              <input type="text" name="firstName" required placeholder="John">
+            </div>
+            <div class="fg">
+              <label>Last Name <span class="req">*</span></label>
+              <input type="text" name="lastName" required placeholder="Doe">
+            </div>
+          </div>
+          <div class="fg">
+            <label>Work Email <span class="req">*</span></label>
+            <input type="email" name="email" required placeholder="john.doe@hospital.org">
+          </div>
+          <div class="fg-row">
+            <div class="fg">
+              <label>Organisation <span class="req">*</span></label>
+              <input type="text" name="organisation" required placeholder="Hospital / Health System">
+            </div>
+            <div class="fg">
+              <label>Job Title</label>
+              <input type="text" name="jobTitle" placeholder="CIO, CISO, IT Director...">
+            </div>
+          </div>
+          <div class="fg">
+            <label>Phone Number</label>
+            <input type="tel" name="phone" placeholder="+1 (555) 000-0000">
+          </div>
+          <div class="fg">
+            <label>Deployment Interest <span class="req">*</span></label>
+            <select name="deployment" required>
+              <option value="" disabled selected>Select preferred deployment</option>
+              <option value="SaaS (Managed Cloud)">SaaS (Managed Cloud)</option>
+              <option value="On-Premise">On-Premise</option>
+              <option value="Private Cloud (AWS / Azure / GCP)">Private Cloud (AWS / Azure / GCP)</option>
+              <option value="Not Sure Yet">Not Sure Yet</option>
+            </select>
+          </div>
+          <div class="fg">
+            <label>How can we help? <span class="req">*</span></label>
+            <textarea name="message" required placeholder="Tell us about your current imaging workflow, number of sites, PACS vendor, and any specific requirements..."></textarea>
+          </div>
+          <button type="submit" class="form-submit-btn" id="submitBtn">Submit Enquiry</button>
+        </form>
+        <div class="form-ok" id="formOk">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          <h4>Thank you for your enquiry</h4>
+          <p>Our team will review your requirements and respond within one business day.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="wrap footer-inner">
+    <div class="footer-left">
+      <div class="footer-mark"><svg viewBox="0 0 16 16" fill="none"><path d="M8 2L3 5.5v5L8 14l5-3.5v-5L8 2z" stroke="#fff" stroke-width="1.5" fill="none"/><circle cx="8" cy="8" r="2" fill="#fff"/></svg></div>
+      <span class="footer-name">RadiantShield</span>
+    </div>
+    <div class="footer-copy">&copy; 2026 RadiantShield. All rights reserved.</div>
+  </div>
+</footer>
+
+<script>
+(function() {
+  // ── CONFIG: Airtable (add credentials when ready) ──
+  var AIRTABLE_PAT = '';
+  var AIRTABLE_BASE_ID = '';
+  var AIRTABLE_TABLE = 'Enquiries';
+
+  // ── NAV ──
+  document.getElementById('navToggle').addEventListener('click', function() {
+    document.getElementById('navLinks').classList.toggle('open');
+  });
+  document.querySelectorAll('.nav-links a').forEach(function(a) {
+    a.addEventListener('click', function() {
+      document.getElementById('navLinks').classList.remove('open');
+    });
+  });
+
+  // ── SCROLL REVEAL ──
+  var obs = new IntersectionObserver(function(entries) {
+    entries.forEach(function(e) { if (e.isIntersecting) e.target.classList.add('in'); });
+  }, { threshold: 0.08, rootMargin: '0px 0px -30px 0px' });
+  document.querySelectorAll('.reveal').forEach(function(el) { obs.observe(el); });
+
+  // ── FORM ──
+  var form = document.getElementById('enquiryForm');
+  var btn = document.getElementById('submitBtn');
+  var errEl = document.getElementById('formErr');
+
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+    errEl.style.display = 'none';
+    btn.disabled = true;
+    btn.textContent = 'Submitting...';
+
+    var fd = new FormData(form);
+    var data = {};
+    fd.forEach(function(v, k) { data[k] = v; });
+    data.submittedAt = new Date().toISOString();
+
+    // Airtable submission
+    if (AIRTABLE_PAT && AIRTABLE_BASE_ID) {
+      fetch('https://api.airtable.com/v0/' + AIRTABLE_BASE_ID + '/' + encodeURIComponent(AIRTABLE_TABLE), {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + AIRTABLE_PAT,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          fields: {
+            'First Name': data.firstName,
+            'Last Name': data.lastName,
+            'Email': data.email,
+            'Organisation': data.organisation,
+            'Job Title': data.jobTitle || '',
+            'Phone': data.phone || '',
+            'Deployment Interest': data.deployment,
+            'Message': data.message,
+            'Status': 'New'
+          }
+        })
+      }).then(function(r) {
+        if (!r.ok) throw new Error('Submission failed');
+        showSuccess();
+      }).catch(function() {
+        showError('Submission failed. Please try again or email us directly.');
+        btn.disabled = false;
+        btn.textContent = 'Submit Enquiry';
+      });
+    } else {
+      // Fallback: localStorage + success state
+      var subs = JSON.parse(localStorage.getItem('rs_enquiries') || '[]');
+      subs.push(data);
+      localStorage.setItem('rs_enquiries', JSON.stringify(subs));
+      showSuccess();
+    }
+  });
+
+  function showSuccess() {
+    form.style.display = 'none';
+    document.getElementById('formOk').style.display = 'block';
+  }
+  function showError(msg) {
+    errEl.textContent = msg;
+    errEl.style.display = 'block';
+  }
+})();
+</script>
+</body>
+</html>
